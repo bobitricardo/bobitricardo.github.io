@@ -1,0 +1,671 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Kuisioner Rekrutmen - Bawa Laundry</title>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+    <style>
+        body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; margin: 0; padding: 20px; background-color: #f0f2f5; color: #333; }
+        .container { max-width: 800px; margin: auto; background: #fff; padding: 30px; border-radius: 10px; box-shadow: 0 4px 15px rgba(0,0,0,0.1); }
+        h1, h2 { text-align: center; color: #2c3e50; margin-bottom: 20px; }
+        .form-group { margin-bottom: 15px; }
+        label { display: block; margin-bottom: 5px; font-weight: bold; }
+        input, select, textarea { width: 100%; padding: 10px; border: 1px solid #ccc; border-radius: 5px; box-sizing: border-box; font-size: 16px; }
+        .question-box { background: #f9f9f9; padding: 15px; border-left: 5px solid #3498db; margin-bottom: 20px; border-radius: 4px; }
+        .radio-option { display: flex; align-items: flex-start; margin: 10px 0; cursor: pointer; padding: 8px; border-radius: 4px; transition: background 0.2s; }
+        .radio-option:hover { background-color: #e8f4fd; }
+        .radio-option input { width: auto; margin-right: 10px; margin-top: 4px; }
+        .btn { display: block; width: 100%; padding: 15px; background-color: #27ae60; color: white; border: none; border-radius: 5px; cursor: pointer; font-size: 18px; font-weight: bold; margin-top: 20px; text-align: center; text-decoration: none; }
+        .btn:hover { background-color: #219150; }
+        .btn-primary { background-color: #2980b9; }
+        .btn-primary:hover { background-color: #1f6391; }
+        .btn-wa { background-color: #25D366; }
+        .btn-wa:hover { background-color: #1ebc57; }
+        .page-section { display: none; animation: fadeIn 0.5s; }
+        .active { display: block; }
+        .score-display { font-size: 3em; color: #27ae60; font-weight: bold; text-align: center; margin: 20px 0; }
+        .result-details { background: #ecf0f1; padding: 15px; border-radius: 5px; margin-bottom: 20px; }
+        .quiz-instruction { text-align: center; font-size: 1.1em; font-weight: 500; color: #444; margin-bottom: 20px; border-bottom: 1px solid #eee; padding-bottom: 10px; }
+        .instruction-detail { text-align: center; font-size: 0.9em; color: #777; margin-bottom: 15px; }
+        .disqualified { color: white; background-color: #e74c3c; border-radius: 8px; padding: 30px; margin-top: 30px; }
+        .disqualified h2 { color: white; }
+        .progress-bar { height: 5px; background: #e0e0e0; margin-bottom: 20px; border-radius: 5px; overflow: hidden; }
+        .progress-fill { height: 100%; background: #3498db; width: 0%; transition: width 0.3s; }
+        @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
+    </style>
+</head>
+<body>
+
+<div class="container">
+    <div class="progress-bar"><div class="progress-fill" id="progressBar"></div></div>
+
+    <div id="page-0" class="page-section active">
+        <h1>Selamat Datang</h1>
+        <h2>Kuisioner Rekrutmen Bawa Laundry</h2>
+        <div style="text-align: center; margin: 40px 0;">
+            <img src="https://img.icons8.com/color/96/washing-machine.png" alt="Laundry Icon" style="width: 100px;">
+        </div>
+        <div class="quiz-instruction" style="line-height: 1.6;">
+            <p>Terima kasih atas ketertarikan Anda untuk bergabung.</p>
+            <p style="color: #007bff; font-weight: bold; font-size: 1.2em;">PENTING: Kuisioner ini harus diisi dalam waktu maksimal 15 menit.</p>
+            <p>Waktu akan dicatat otomatis setelah Anda menekan tombol "Lanjut" di halaman data diri. Mohon isi disaat senggang.</p>
+        </div>
+        <button type="button" class="btn btn-primary" onclick="goToNextPage()">Mulai Isi Data Diri &raquo;</button>
+    </div>
+
+    <div id="page-1" class="page-section">
+        <h1>Data Diri Kandidat</h1>
+        <p class="instruction-detail">Harap isi semua kolom dengan data yang valid. Kolom Usia akan terisi otomatis.</p>
+        <form id="identityForm">
+            <div class="form-group"><label>Tanggal Pengisian:</label><input type="date" id="tgl_isi" required></div>
+            <div class="form-group">
+                <label>Bagian yang Dilamar:</label>
+                <select id="posisi" required>
+                    <option value="">-- Pilih Posisi --</option>
+                    <option value="Cuci Kiloan dan Satuan">Bag. Cuci Kiloan dan Satuan</option>
+                    <option value="Kasir dan Packing">Bag. Kasir dan Packing</option>
+                    <option value="Setrika">Bag. Setrika</option>
+                </select>
+            </div>
+            <h3>Identitas Kandidat</h3>
+            <div class="form-group"><label>Nama Lengkap:</label><input type="text" id="nama" required></div>
+            <div class="form-group"><label>NIK (KTP):</label><input type="text" id="nik" required></div>
+            <div style="display: flex; gap: 10px; margin-bottom: 15px;">
+                <div style="width: 50%;"><label>Tempat Lahir:</label><input type="text" id="tempat_lahir" required></div>
+                <div style="width: 50%;"><label>Tanggal Lahir:</label><input type="date" id="tgl_lahir" onchange="calculateAge()" required></div>
+            </div>
+            <div class="form-group"><label>Usia:</label><input type="number" id="usia" required readonly placeholder="Otomatis"></div>
+            <div class="form-group"><label>Jenis Kelamin:</label><select id="jk" required><option value="Laki-laki">Laki-laki</option><option value="Perempuan">Perempuan</option></select></div>
+            <div class="form-group"><label>Alamat Domisili:</label><input type="text" id="alamat_jalan" required></div>
+            <div style="display: flex; gap: 10px;"><input type="text" id="rt" placeholder="RT" style="width: 50%;"><input type="text" id="rw" placeholder="RW" style="width: 50%;"></div>
+            <div class="form-group" style="margin-top: 5px;"><input type="text" id="kelurahan" placeholder="Kelurahan" required></div>
+            <div class="form-group"><input type="text" id="kecamatan" placeholder="Kecamatan" required></div>
+            <div class="form-group"><input type="text" id="kota" placeholder="Kota/Kab" required></div>
+            <div class="form-group"><input type="text" id="provinsi" placeholder="Provinsi" required></div>
+            <div class="form-group">
+                <label>Status Pernikahan:</label>
+                <select id="status_nikah" onchange="toggleAnak()" required>
+                    <option value="">-- Pilih --</option>
+                    <option value="Belum Menikah">Belum Menikah</option>
+                    <option value="Menikah">Menikah</option>
+                    <option value="Cerai Hidup">Cerai Hidup</option>
+                    <option value="Cerai Mati">Cerai Mati</option>
+                </select>
+            </div>
+            <div class="form-group"><label>Jumlah Anak:</label><input type="number" id="jml_anak" disabled placeholder="Isi 0 jika tidak ada"></div>
+            <div class="form-group"><label>No. Telp/HP (WA):</label><input type="tel" id="hp" required></div>
+            <h3>Kontak Darurat</h3>
+            <div class="form-group"><label>Nama:</label><input type="text" id="darurat_nama" required></div>
+            <div class="form-group"><label>Alamat:</label><input type="text" id="darurat_alamat" required></div>
+            <div class="form-group"><label>Hubungan:</label><select id="darurat_hubungan" required>
+                <option value="Orang Tua">Ayah/Ibu</option><option value="Pasangan">Suami/Istri</option><option value="Kakak/Adik">Kakak/Adik</option><option value="Kakek/Nenek">Kakek/Nenek</option><option value="Anak">Anak</option><option value="Lainnya">Lainnya</option>
+            </select></div>
+            <div class="form-group"><label>No. HP Darurat:</label><input type="tel" id="darurat_hp" required></div>
+            <button type="button" class="btn btn-primary" onclick="goToNextPage()">Lanjut &raquo;</button>
+        </form>
+    </div>
+
+    <div id="page-admin" class="page-section"><h1>KUISIONER</h1><p class="quiz-instruction">Administrasi & Logistik</p><p class="instruction-detail">Pilihlah yang paling akurat menggambarkan kondisi Anda. Jawaban D, C, atau jawaban yang membatasi fisik dapat berujung diskualifikasi.</p><form id="quizForm-admin"><div id="quiz-container-admin"></div><button type="button" class="btn btn-primary" onclick="goToNextPage()">Lanjut &raquo;</button></form></div>
+
+    <div id="page-char-1" class="page-section"><h1>KUISIONER</h1><p class="quiz-instruction">Karakter (Bagian 1)</p><p class="instruction-detail">Pilihlah tindakan yang paling ideal dan profesional (Skala 5-2). Hati-hati, opsi 4 & 3 seringkali terdengar praktis.</p><form id="quizForm-char-1"><div id="quiz-container-char-1"></div><button type="button" class="btn btn-primary" onclick="goToNextPage()">Lanjut &raquo;</button></form></div>
+    <div id="page-char-2" class="page-section"><h1>KUISIONER</h1><p class="quiz-instruction">Karakter (Bagian 2)</p><p class="instruction-detail">Pilihlah tindakan yang paling ideal dan profesional (Skala 5-2).</p><form id="quizForm-char-2"><div id="quiz-container-char-2"></div><button type="button" class="btn btn-primary" onclick="goToNextPage()">Lanjut &raquo;</button></form></div>
+
+    <div id="page-logic-1" class="page-section"><h1>KUISIONER</h1><p class="quiz-instruction">Logika (Bagian 1)</p><p class="instruction-detail">Pilihlah jawaban yang paling PASTI benar. Hanya ada 1 jawaban yang bernilai (Skor 5).</p><form id="quizForm-logic-1"><div id="quiz-container-logic-1"></div><button type="button" class="btn btn-primary" onclick="goToNextPage()">Lanjut &raquo;</button></form></div>
+    <div id="page-logic-2" class="page-section"><h1>KUISIONER</h1><p class="quiz-instruction">Logika (Bagian 2)</p><p class="instruction-detail">Pilihlah jawaban yang paling PASTI benar (Skor 5).</p><form id="quizForm-logic-2"><div id="quiz-container-logic-2"></div><button type="button" class="btn btn-primary" onclick="goToNextPage()">Lanjut &raquo;</button></form></div>
+
+    <div id="page-tech-1" class="page-section"><h1>KUISIONER</h1><p class="quiz-instruction">Tes Teknis (Bagian 1)</p><p class="instruction-detail">Soal tentang simbol dan penanganan noda kritis. Pilihlah jawaban yang paling TEPAT secara teknis.</p><form id="quizForm-tech-1"><div id="quiz-container-tech-1"></div><button type="button" class="btn btn-primary" onclick="goToNextPage()">Lanjut &raquo;</button></form></div>
+    <div id="page-tech-2" class="page-section"><h1>KUISIONER</h1><p class="quiz-instruction">Tes Teknis (Bagian 2)</p><p class="instruction-detail">Soal tentang keselamatan kerja (K3) dan perencanaan produksi.</p><form id="quizForm-tech-2"><div id="quiz-container-tech-2"></div><button type="button" class="btn btn-primary" onclick="goToNextPage()">Lanjut &raquo;</button></form></div>
+
+    <div id="page-hard-cuci-1" class="page-section"><h1>KUISIONER</h1><p class="quiz-instruction">Hard Skill Cuci (Bagian 1)</p><p class="instruction-detail">Pilihlah prosedur yang paling aman, efisien, dan sesuai SOP teknis pencucian.</p><form id="quizForm-hard-cuci-1"><div id="quiz-container-hard-cuci-1"></div><button type="button" class="btn btn-primary" onclick="goToNextPage()">Lanjut &raquo;</button></form></div>
+    <div id="page-hard-cuci-2" class="page-section"><h1>KUISIONER</h1><p class="quiz-instruction">Hard Skill Cuci (Bagian 2)</p><p class="instruction-detail">Pilihlah prosedur yang paling aman, efisien, dan sesuai SOP teknis pencucian.</p><form id="quizForm-hard-cuci-2"><div id="quiz-container-hard-cuci-2"></div><button type="button" class="btn btn-primary" onclick="goToNextPage()">Lanjut &raquo;</button></form></div>
+
+    <div id="page-hard-kasir-1" class="page-section"><h1>KUISIONER</h1><p class="quiz-instruction">Hard Skill Kasir (Bagian 1)</p><p class="instruction-detail">Pilihlah prosedur yang paling teliti dan mengutamakan keamanan kas/data pelanggan.</p><form id="quizForm-hard-kasir-1"><div id="quiz-container-hard-kasir-1"></div><button type="button" class="btn btn-primary" onclick="goToNextPage()">Lanjut &raquo;</button></form></div>
+    <div id="page-hard-kasir-2" class="page-section"><h1>KUISIONER</h1><p class="quiz-instruction">Hard Skill Kasir (Bagian 2)</p><p class="instruction-detail">Pilihlah prosedur yang paling teliti dan mengutamakan keamanan kas/data pelanggan.</p><form id="quizForm-hard-kasir-2"><div id="quiz-container-hard-kasir-2"></div><button type="button" class="btn btn-primary" onclick="goToNextPage()">Lanjut &raquo;</button></form></div>
+
+    <div id="page-hard-setrika-1" class="page-section"><h1>KUISIONER</h1><p class="quiz-instruction">Hard Skill Setrika (Bagian 1)</p><p class="instruction-detail">Pilihlah prosedur yang paling aman untuk kain dan efektif dalam penggunaan alat.</p><form id="quizForm-hard-setrika-1"><div id="quiz-container-hard-setrika-1"></div><button type="button" class="btn btn-primary" onclick="goToNextPage()">Lanjut &raquo;</button></form></div>
+    <div id="page-hard-setrika-2" class="page-section"><h1>KUISIONER</h1><p class="quiz-instruction">Hard Skill Setrika (Bagian 2)</p><p class="instruction-detail">Pilihlah prosedur yang paling aman untuk kain dan efektif dalam penggunaan alat.</p><form id="quizForm-hard-setrika-2"><div id="quiz-container-hard-setrika-2"></div><button type="button" class="btn btn-primary" onclick="goToNextPage()">Lanjut &raquo;</button></form></div>
+
+    <div id="page-soft-1" class="page-section"><h1>KUISIONER</h1><p class="quiz-instruction">Soft Skill (Bagian 1)</p><p class="instruction-detail">Pilihlah pendekatan yang paling profesional dan berorientasi solusi saat melayani pelanggan atau rekan kerja.</p><form id="quizForm-soft-1"><div id="quiz-container-soft-1"></div><button type="button" class="btn btn-primary" onclick="goToNextPage()">Lanjut &raquo;</button></form></div>
+    <div id="page-soft-2" class="page-section"><h1>KUISIONER</h1><p class="quiz-instruction">Soft Skill (Bagian 2)</p><p class="instruction-detail">Pilihlah pendekatan yang paling profesional dan berorientasi solusi saat melayani pelanggan atau rekan kerja.</p><form id="quizForm-soft-2"><div id="quiz-container-soft-2"></div><button type="button" class="btn btn-primary" onclick="goToNextPage()">Lanjut &raquo;</button></form></div>
+
+    <div id="page-cult-1" class="page-section"><h1>KUISIONER</h1><p class="quiz-instruction">Budaya Kerja (Bagian 1)</p><p class="instruction-detail">Pilihlah jawaban yang menunjukkan ketahanan fisik dan mental Anda terhadap tuntutan kerja laundry.</p><form id="quizForm-cult-1"><div id="quiz-container-cult-1"></div><button type="button" class="btn btn-primary" onclick="goToNextPage()">Lanjut &raquo;</button></form></div>
+    <div id="page-cult-2" class="page-section"><h1>KUISIONER</h1><p class="quiz-instruction">Budaya Kerja (Bagian 2)</p><p class="instruction-detail">Pilihlah jawaban yang menunjukkan ketahanan fisik dan mental Anda terhadap tuntutan kerja laundry.</p><form id="quizForm-cult-2"><div id="quiz-container-cult-2"></div><button type="button" class="btn btn-primary" onclick="goToNextPage()">Lanjut &raquo;</button></form></div>
+
+    <div id="page-likert-1" class="page-section"><h1>KUISIONER</h1><p class="quiz-instruction">Penilaian Diri (Bagian 1)</p><p class="instruction-detail">SS=Sangat Setuju, S=Setuju, N=Netral, TS=Tidak Setuju, STS=Sangat Tidak Setuju.</p><form id="quizForm-likert-1"><div id="quiz-container-likert-1"></div><button type="button" class="btn btn-primary" onclick="goToNextPage()">Lanjut &raquo;</button></form></div>
+    <div id="page-likert-2" class="page-section"><h1>KUISIONER</h1><p class="quiz-instruction">Penilaian Diri (Bagian 2)</p><p class="instruction-detail">SS=Sangat Setuju, S=Setuju, N=Netral, TS=Tidak Setuju, STS=Sangat Tidak Setuju.</p><form id="quizForm-likert-2"><div id="quiz-container-likert-2"></div><button type="button" class="btn btn-primary" onclick="goToNextPage()">Lanjut &raquo;</button></form></div>
+    <div id="page-likert-3" class="page-section"><h1>KUISIONER</h1><p class="quiz-instruction">Penilaian Diri (Bagian 3)</p><p class="instruction-detail">SS=Sangat Setuju, S=Setuju, N=Netral, TS=Tidak Setuju, STS=Sangat Tidak Setuju.</p><form id="quizForm-likert-3"><div id="quiz-container-likert-3"></div><button type="button" class="btn" onclick="goToNextPage()">Selesai & Lihat Score &raquo;</button></form></div>
+
+    <div id="page-9" class="page-section">
+        <h1>Hasil Penilaian</h1>
+        <div class="result-details">
+            <p><strong>Nama:</strong> <span id="res_nama"></span></p>
+            <p><strong>Posisi:</strong> <span id="res_posisi"></span></p>
+            <p><strong>Durasi Pengisian:</strong> <span id="res_duration"></span></p>
+        </div>
+        <p style="text-align: center;">Skor Total Anda:</p>
+        <div class="score-display"><span id="finalScore">0</span> / 480</div>
+        
+        <div style="margin-top: 30px; border-top: 1px solid #ccc; padding: 20px; background-color: #e8f5e9; border-radius: 8px;">
+            <p style="text-align: center; color: #333; font-weight: bold;">Langkah Wajib:</p>
+            <ol><li>Klik tombol hijau. File PDF hasil tes akan <strong>otomatis terunduh</strong>.</li><li>WhatsApp Admin akan terbuka otomatis.</li><li><strong>Wajib:</strong> Lampirkan file PDF yang baru terunduh ke chat WhatsApp tersebut.</li></ol>
+            <button type="button" class="btn btn-wa" onclick="processPDFandWhatsApp()">📲 Unduh PDF & Kirim WA</button>
+        </div>
+    </div>
+    
+    <div id="page-disqualified" class="page-section">
+        <div class="disqualified">
+            <h2>MAAF, BELUM SESUAI KRITERIA</h2>
+            <p>Berdasarkan jawaban Anda pada sesi Administrasi & Logistik, kami tidak dapat melanjutkan proses seleksi ini.</p>
+            <p>Kami mencari kandidat yang ketersediaan dan kondisi fisiknya sesuai dengan tuntutan operasional 24 jam dan lingkungan laundry.</p>
+            <p>Terima kasih atas waktu dan kejujuran Anda.</p>
+        </div>
+    </div>
+
+</div>
+
+<script>
+    // --- GLOBAL VARIABLES ---
+    let currentPageIndex = 0; 
+    let userAnswersLog = [];
+    let finalScore = 0;
+    const maxScore = 480;
+    let startTime = 0; 
+    let durationString = "";
+
+    // Mapping Kategori dan Maksimal Skor (Diperlukan untuk Analisis)
+    const categoryMapping = {
+        'page-admin': { name: 'Kesiapan Logistik', max: 25 },
+        'page-char-1': { name: 'Karakter', max: 25 }, 'page-char-2': { name: 'Karakter', max: 25 },
+        'page-logic-1': { name: 'Logika & Umum', max: 25 }, 'page-logic-2': { name: 'Logika & Umum', max: 25 },
+        'page-tech-1': { name: 'Tes Teknis', max: 25 }, 'page-tech-2': { name: 'Tes Teknis', max: 20 },
+        'page-hard-cuci-1': { name: 'Hard Skill Cuci', max: 25 }, 'page-hard-cuci-2': { name: 'Hard Skill Cuci', max: 25 },
+        'page-hard-kasir-1': { name: 'Hard Skill Kasir', max: 25 }, 'page-hard-kasir-2': { name: 'Hard Skill Kasir', max: 25 },
+        'page-hard-setrika-1': { name: 'Hard Skill Setrika', max: 25 }, 'page-hard-setrika-2': { name: 'Hard Skill Setrika', max: 25 },
+        'page-soft-1': { name: 'Soft Skill', max: 25 }, 'page-soft-2': { name: 'Soft Skill', max: 25 },
+        'page-cult-1': { name: 'Culture Fit', max: 25 }, 'page-cult-2': { name: 'Culture Fit', max: 25 },
+        'page-likert-1': { name: 'Skala Diri', max: 25 }, 'page-likert-2': { name: 'Skala Diri', max: 25 }, 
+        'page-likert-3': { name: 'Skala Diri', max: 10 },
+    };
+
+    // --- FULL DATABASE PERTANYAAN (LENGKAP) ---
+    const questionsDB = {
+        'page-admin': { title: "Administrasi & Logistik", questions: [
+            { q: "1. Ketersediaan Shift (Operasional 24 Jam).", options: [{txt:"Tersedia semua shift (Pagi/Siang/Malam/Libur).", val:5}, {txt:"Hanya Pagi & Siang.", val:3}, {txt:"Hanya Senin-Jumat.", val:0, knockout: true}, {txt:"Ada batasan jam kuliah/lainnya.", val:0, knockout: true}] },
+            { q: "2. Sikap terhadap Lembur (High Season).", options: [{txt:"Siap lembur kapan saja, termasuk mendadak.", val:5}, {txt:"Siap lembur jika diberitahu 24 jam sebelumnya.", val:4}, {txt:"Memilih tidak, tapi mau jika terpaksa.", val:2}, {txt:"Tidak bisa lembur.", val:0, knockout: true}] },
+            { q: "3. Kemampuan Berdiri (7-8 Jam).", options: [{txt:"Terbiasa berdiri lama, tidak ada masalah medis.", val:5}, {txt:"Bisa, tapi butuh duduk tiap 2 jam.", val:3}, {txt:"Ada batasan medis (max 1 jam).", val:0, knockout: true}, {txt:"Tidak tahan panas/lembab.", val:0, knockout: true}] },
+            { q: "4. Mengangkat Beban (Linen 20-25kg).", options: [{txt:"Mampu angkat 25kg rutin tanpa bantuan.", val:5}, {txt:"Mampu sesekali, lebih nyaman <15kg.", val:3}, {txt:"Dilarang angkat berat (riwayat cedera).", val:0, knockout: true}, {txt:"Tidak kuat angkat beban.", val:0, knockout: true}] },
+            { q: "5. Riwayat Alergi Kimia.", options: [{txt:"Tidak ada riwayat alergi.", val:5}, {txt:"Kulit sensitif tapi aman pakai sarung tangan.", val:3}, {txt:"Punya asma/alergi bau menyengat.", val:0, knockout: true}, {txt:"Alergi debu parah.", val:0, knockout: true}] },
+        ]},
+        'page-char-1': { title: "Karakter Part 1", questions: [
+            { q: "1. Saat membersihkan saku, menemukan Rp 50.000.", options: [{txt:"Lapor atasan & catat sesuai SOP.", val:5},{txt:"Hubungi pelanggan sendiri via WA.", val:4},{txt:"Simpan di laci kasir, tunggu ditanya.", val:3},{txt:"Ambil sebagai tip.", val:2}] },
+            { q: "2. Tanpa sengaja Anda merobek sedikit kemeja pelanggan.", options: [{txt:"Lapor manajemen saat itu juga.", val:5},{txt:"Catat di buku laporan akhir shift.", val:4},{txt:"Coba jahit sendiri agar rapi.", val:3},{txt:"Lipat di bagian dalam agar tak terlihat.", val:2}] },
+            { q: "3. Bangun kesiangan 30 menit dari jadwal shift.", options: [{txt:"Kabari atasan jujur dan segera berangkat.", val:5},{txt:"Berangkat kilat, nanti alasan ban bocor.", val:4},{txt:"Minta tukar shift mendadak.", val:3},{txt:"Izin sakit mendadak.", val:2}] },
+            { q: "4. Rekan kerja menuang deterjen toko ke botol pribadi.", options: [{txt:"Tegur langsung dan lapor jika diulangi.", val:5},{txt:"Lapor diam-diam ke bos.", val:4},{txt:"Diam saja takut dimusuhi.", val:3},{txt:"Minta bagi sedikit.", val:2}] },
+            { q: "5. Pekerjaan selesai 1 jam lebih awal.", options: [{txt:"Cari area kotor untuk dibersihkan.", val:5},{txt:"Duduk standby menunggu jam pulang.", val:4},{txt:"Istirahat main HP.", val:3},{txt:"Pulang lebih awal.", val:2}] },
+        ]},
+        'page-char-2': { title: "Karakter Part 2", questions: [
+            { q: "6. Kembalian belanja toko sisa Rp 3.000.", options: [{txt:"Kembalikan semua sisa ke kas.", val:5},{txt:"Bulatkan laporan, sisa buat parkir.", val:4},{txt:"Belikan gorengan buat teman-teman.", val:3},{txt:"Masuk kantong pribadi.", val:2}] },
+            { q: "7. SOP catat suhu mesin tapi toko ramai.", options: [{txt:"Tetap catat sesuai jadwal disela kesibukan.", val:5},{txt:"Catat nanti dirapel akhir shift.", val:4},{txt:"Lewatkan demi layani pelanggan.", val:3},{txt:"Isi data acak asal penuh.", val:2}] },
+            { q: "8. Pelanggan tertinggal jam tangan.", options: [{txt:"Amankan, bungkus, labeli, lapor grup.", val:5},{txt:"Simpan di saku pribadi agar aman.", val:4},{txt:"Biarkan di meja kasir.", val:3},{txt:"Coba pakai sebentar.", val:2}] },
+            { q: "9. Bos marah hasil setrika jelek (kerjaan teman).", options: [{txt:"Jelaskan situasi objektif, ajak tim perbaiki.", val:5},{txt:"Diam menghormati teman.", val:4},{txt:"Tunjuk teman agar saya aman.", val:3},{txt:"Pura-pura tidak tahu.", val:2}] },
+            { q: "10. Acara keluarga mendadak di jam kerja.", options: [{txt:"Tetap kerja atau cari pengganti jauh hari.", val:5},{txt:"Izin pulang cepat saat hari H.", val:4},{txt:"Izin sakit.", val:3},{txt:"Keluar sebentar tanpa izin.", val:2}] },
+        ]},
+        'page-logic-1': { title: "Logika Part 1", questions: [
+            { q: "1. Tagihan Rp 67.500, bayar Rp 100.000. Kembalian?", options: [{txt:"Rp 32.500", val:5}, {txt:"Rp 42.500", val:0}, {txt:"Rp 33.500", val:0}, {txt:"Rp 22.500", val:0}] },
+            { q: "2. 1,5 Kg berapa gram?", options: [{txt:"1500 gram", val:5}, {txt:"150 gram", val:0}, {txt:"1050 gram", val:0}, {txt:"15000 gram", val:0}] },
+            { q: "3. Prioritas: Ambil Cucian (5mnt) vs Taruh Cucian (10mnt).", options: [{txt:"Layani Ambil dulu (cepat), lalu Taruh.", val:5}, {txt:"Layani Taruh dulu, lalu Ambil.", val:0}, {txt:"Minta tunggu, setrika dulu.", val:0}, {txt:"Layani yang terlihat kaya.", val:0}] },
+            { q: "4. Noda minyak paling efektif dibersihkan dengan?", options: [{txt:"Sabun cuci piring", val:5}, {txt:"Pemutih", val:0}, {txt:"Air panas", val:0}, {txt:"Pelembut", val:0}] },
+            { q: "5. Estimasi: Cuci(1h)+Kering(1h)+Finish(30m). Mulai 08.00.", options: [{txt:"10.30", val:5}, {txt:"11.00", val:0}, {txt:"09.30", val:0}, {txt:"10.00", val:0}] },
+        ]},
+        'page-logic-2': { title: "Logika Part 2", questions: [
+            { q: "6. Listrik padam saat mesin berputar.", options: [{txt:"Cabut colokan listrik.", val:5}, {txt:"Biarkan colokan terpasang.", val:0}, {txt:"Paksa buka pintu.", val:0}, {txt:"Tekan tombol power.", val:0}] },
+            { q: "7. Urutan mencuci yang benar.", options: [{txt:"Spotting -> Cuci -> Bilas -> Spin", val:5}, {txt:"Cuci -> Spotting -> Jemur -> Bilas", val:0}, {txt:"Rendam Pewangi -> Cuci -> Spotting", val:0}, {txt:"Cuci -> Setrika -> Jemur", val:0}] },
+            { q: "8. Setrika : Kerapian = Deterjen : ...?", options: [{txt:"Kebersihan", val:5}, {txt:"Keharuman", val:0}, {txt:"Kelembutan", val:0}, {txt:"Air", val:0}] },
+            { q: "9. Packing: Posisi baju tebal (Jaket).", options: [{txt:"Paling bawah.", val:5}, {txt:"Paling atas.", val:0}, {txt:"Di tengah.", val:0}, {txt:"Dipisah.", val:0}] },
+            { q: "10. Baju merah dan putih dicuci air panas.", options: [{txt:"Risiko luntur tinggi.", val:5}, {txt:"Boros listrik.", val:0}, {txt:"Putih menyusut.", val:0}, {txt:"Tidak masalah.", val:0}] },
+        ]},
+        'page-tech-1': { title: "Tes Teknis Part 1", questions: [
+            { q: "1. Simbol 'Lingkaran dalam Kotak'.", options: [{txt:"Boleh dikeringkan mesin (Tumble Dry).", val:5}, {txt:"Cuci kering saja.", val:0}, {txt:"Jangan diperas.", val:0}, {txt:"Jemur datar.", val:0}] },
+            { q: "2. Simbol 'Setrika Dua Titik'.", options: [{txt:"150°C (Suhu Sedang/Medium).", val:5}, {txt:"110°C (Rendah).", val:0}, {txt:"200°C (Tinggi).", val:0}, {txt:"Tidak boleh uap.", val:0}] },
+            { q: "3. Simbol 'Segitiga Silang'.", options: [{txt:"Jangan gunakan pemutih jenis apapun.", val:5}, {txt:"Pakai klorin.", val:0}, {txt:"Pakai oksigen.", val:0}, {txt:"Boleh air panas.", val:0}] },
+            { q: "4. Simbol 'Lingkaran huruf P'.", options: [{txt:"Dry Clean pelarut PCE.", val:5}, {txt:"Cuci air biasa.", val:0}, {txt:"Dry Clean Petroleum.", val:0}, {txt:"Wet Clean.", val:0}] },
+            { q: "5. Noda minyak/saus salad.", options: [{txt:"Aplikasikan deterjen alkali/sabun cuci piring.", val:5}, {txt:"Rendam air panas.", val:0}, {txt:"Pakai cuka.", val:0}, {txt:"Sikat kawat.", val:0}] },
+        ]},
+        'page-tech-2': { title: "Tes Teknis Part 2", questions: [
+            { q: "6. Noda darah segar (yang HARUS dihindari).", options: [{txt:"Mencucinya dengan air panas.", val:5}, {txt:"Cuci air dingin.", val:0}, {txt:"Pakai enzim.", val:0}, {txt:"Bilas segera.", val:0}] },
+            { q: "7. Campur Pemutih Klorin + Asam.", options: [{txt:"Menghasilkan gas kloramin beracun.", val:5}, {txt:"Menjadi tidak aktif.", val:0}, {txt:"Busa berlebih.", val:0}, {txt:"Baju jadi pink.", val:0}] },
+            { q: "8. 5 Mesin x 10kg. Target 200kg dalam 4 jam.", options: [{txt:"Pas sekali (tepat waktu).", val:5}, {txt:"Masih sisa waktu.", val:0}, {txt:"Butuh 5 jam.", val:0}, {txt:"Butuh 8 jam.", val:0}] },
+            { q: "9. Rasio 1:10 (Kimia:Air). Botol 550ml.", options: [{txt:"50 ml kimia.", val:5}, {txt:"40 ml.", val:0}, {txt:"55 ml.", val:0}, {txt:"100 ml.", val:0}] },
+        ]},
+        'page-hard-cuci-1': { title: "Hard Skill Cuci Part 1", questions: [
+            { q: "1. Menangani baju baru berwarna cerah.", options: [{txt:"Lakukan tes luntur manual, jika luntur cuci terpisah.", val:5},{txt:"Langsung pisah & cuci sendirian di mesin.", val:4},{txt:"Mencucinya dengan air dingin digabung baju gelap.", val:3},{txt:"Gabung semua.", val:2}] },
+            { q: "2. Membersihkan noda deodorant mengeras.", options: [{txt:"Rendam air panas + Sodium Percarbonate.", val:5},{txt:"Rendam air dingin + Sodium Percarbonate.", val:4},{txt:"Sikat keras dengan deterjen bubuk.", val:3},{txt:"Tuang pemutih murni.", val:2}] },
+            { q: "3. Mencuci kebaya payet atau sutra.", options: [{txt:"Cuci manual (Handwash) gerakan lembut.", val:5},{txt:"Masuk Laundry Net, cuci mesin Delicate.", val:4},{txt:"Cuci mesin Normal sendirian.", val:3},{txt:"Cuci mesin Quick.", val:2}] },
+            { q: "4. Takaran deterjen cair standar efisien.", options: [{txt:"10 ml / kg pakaian.", val:5},{txt:"15 ml / kg pakaian.", val:4},{txt:"20 ml / kg pakaian.", val:3},{txt:"5 ml / kg pakaian.", val:2}] },
+            { q: "5. Ada 9kg cucian, kapasitas mesin 7kg.", options: [{txt:"Bagi dua kali pencucian (5kg & 4kg).", val:5},{txt:"Paksa masuk, tambah deterjen.", val:4},{txt:"Paksa masuk mode Heavy Duty.", val:3},{txt:"Paksa masuk hemat listrik.", val:2}] },
+        ]},
+        'page-hard-cuci-2': { title: "Hard Skill Cuci Part 2", questions: [
+            { q: "6. Label baju simbol 'Segitiga Disilang'.", options: [{txt:"Jangan gunakan pemutih jenis apapun.", val:5},{txt:"Boleh pemutih campur air.", val:4},{txt:"Jangan setrika panas.", val:3},{txt:"Wajib Dry Clean.", val:2}] },
+            { q: "7. Mencuci Bedcover Jumbo tebal.", options: [{txt:"Pakai mesin besar (>10kg) agar bersih.", val:5},{txt:"Pakai mesin sedang, dipadatkan.", val:4},{txt:"Rendam bak seharian, bilas mesin.", val:3},{txt:"Mesin kecil air sedikit.", val:2}] },
+            { q: "8. Penyebab utama hasil laundry apek.", options: [{txt:"Pakaian belum 100% kering.", val:5},{txt:"Lupa parfum.", val:4},{txt:"Deterjen kurang wangi.", val:3},{txt:"Air kotor.", val:2}] },
+            { q: "9. SOP Pemeriksaan Saku.", options: [{txt:"Raba dan balik saku keluar.", val:5},{txt:"Cukup raba luar.", val:4},{txt:"Kocok pakaian.", val:3},{txt:"Langsung masuk mesin.", val:2}] },
+            { q: "10. Mencuci Boneka Berbulu.", options: [{txt:"Laundry Net tebal, mode lembut, hindari panas.", val:5},{txt:"Mesin normal tanpa jaring.", val:4},{txt:"Sikat manual kuat.", val:3},{txt:"Tidak bisa dicuci.", val:2}] },
+        ]},
+        'page-hard-kasir-1': { title: "Hard Skill Kasir Part 1", questions: [
+            { q: "1. Uang fisik kurang Rp 20.000 dari sistem.", options: [{txt:"Lapor selisih, investigasi, siap ganti.", val:5},{txt:"Ganti pakai uang pribadi diam-diam.", val:4},{txt:"Ambil dari uang tips.", val:3},{txt:"Biarkan saja.", val:2}] },
+            { q: "2. Pelanggan ambil cucian tapi Nota Hilang.", options: [{txt:"Verifikasi data di sistem & KTP/WA.", val:5},{txt:"Minta sebutkan ciri baju.", val:4},{txt:"Suruh pulang cari nota.", val:3},{txt:"Berikan asal yakin.", val:2}] },
+            { q: "3. Standar Packing Bedcover.", options: [{txt:"Lipat simetris, vakum manual, lakban kencang.", val:5},{txt:"Lipat biasa, plastik jumbo.", val:4},{txt:"Gulung bedcover.", val:3},{txt:"Asal muat.", val:2}] },
+            { q: "4. Waktu tepat semprot Parfum.", options: [{txt:"Saat pakaian sudah dingin sebelum packing.", val:5},{txt:"Saat pakaian masih hangat.", val:4},{txt:"Sesaat setelah setrika.", val:3},{txt:"Semprot dalam plastik.", val:2}] },
+            { q: "5. Urutan komplain baju kurang.", options: [{txt:"Maaf -> Investigasi -> Cek Nota -> Lapor.", val:5},{txt:"Cek CCTV -> Lapor -> Maaf.", val:4},{txt:"Cek Catatan -> Bantah -> Maaf.", val:3},{txt:"Maaf -> Ganti rugi.", val:2}] },
+        ]},
+        'page-hard-kasir-2': { title: "Hard Skill Kasir Part 2", questions: [
+            { q: "6. Fungsi Label pada cucian Satuan.", options: [{txt:"Identitas & instruksi cuci.", val:5},{txt:"Terlihat profesional.", val:4},{txt:"Tahu merek.", val:3},{txt:"Hiasan.", val:2}] },
+            { q: "7. Susunan tumpukan baju kiloan.", options: [{txt:"Berat di bawah, licin di atas, kerah sejajar.", val:5},{txt:"Sesuai urutan setrika.", val:4},{txt:"Selang-seling warna.", val:3},{txt:"Asal rapi.", val:2}] },
+            { q: "8. Menerima uang Rp 100.000.", options: [{txt:"3D (Dilihat, Diraba, Diterawang).", val:5},{txt:"Cek sekilas.", val:4},{txt:"Raba tekstur.", val:3},{txt:"Terima saja.", val:2}] },
+            { q: "9. Input data pelanggan baru.", options: [{txt:"Nama Lengkap, WA, Alamat, Detail Request.", val:5},{txt:"Nama Panggilan & WA.", val:4},{txt:"Nama saja.", val:3},{txt:"Tidak perlu.", val:2}] },
+            { q: "10. Pelanggan bawa bedcover di tumpukan baju.", options: [{txt:"Tawarkan layanan satuan (Upselling).", val:5},{txt:"Terima sebagai kiloan.", val:4},{txt:"Diam saja.", val:3},{txt:"Menolak.", val:2}] },
+        ]},
+        'page-hard-setrika-1': { title: "Hard Skill Setrika Part 1", questions: [
+            { q: "1. Menyetrika kaos sablon karet.", options: [{txt:"Balik kaos atau lapisi kain.", val:5},{txt:"Setrika memutar sekitar sablon.", val:4},{txt:"Suhu kecil gosok pelan.", val:3},{txt:"Gosok cepat.", val:2}] },
+            { q: "2. Menyetrika area kancing kemeja.", options: [{txt:"Ujung setrika sela-sela kancing.", val:5},{txt:"Balik kemeja, setrika belakang.", val:4},{txt:"Tabrak pelan.", val:3},{txt:"Tekan di atas kancing.", val:2}] },
+            { q: "3. Lipatan celana formal tajam.", options: [{txt:"Pertemukan jahitan samping, press uap.", val:5},{txt:"Bentang rata, gosok biasa.", val:4},{txt:"Setrika dalam dulu.", val:3},{txt:"Setrika melebar.", val:2}] },
+            { q: "4. Menyetrika Jersey/Polyester.", options: [{txt:"Uap cukup, mengambang.", val:5},{txt:"Suhu tinggi gerakan cepat.", val:4},{txt:"Lapisi koran.", val:3},{txt:"Lipat saja.", val:2}] },
+            { q: "5. Urutan setrika kemeja.", options: [{txt:"Kerah/Lengan -> Punggung -> Depan.", val:5},{txt:"Depan -> Punggung -> Lengan -> Kerah.", val:4},{txt:"Lengan -> Kerah -> Depan -> Belakang.", val:3},{txt:"Bagian kusut saja.", val:2}] },
+        ]},
+        'page-hard-setrika-2': { title: "Hard Skill Setrika Part 2", questions: [
+            { q: "6. Tercium bau gosong.", options: [{txt:"Angkat setrika, matikan uap, lapor.", val:5},{txt:"Kurangi api, lanjut hati-hati.", val:4},{txt:"Semprot air.", val:3},{txt:"Abaikan.", val:2}] },
+            { q: "7. Baju katun kusut tanpa pelicin.", options: [{txt:"Tekanan uap kuat & teknik press.", val:5},{txt:"Gosok berulang satu titik.", val:4},{txt:"Basahi sampai lembab.", val:3},{txt:"Suhu maksimal.", val:2}] },
+            { q: "8. Air boiler habis.", options: [{txt:"Matikan, buang uap nol, isi.", val:5},{txt:"Matikan, buka kran pelan.", val:4},{txt:"Langsung isi.", val:3},{txt:"Tunggu dingin.", val:2}] },
+            { q: "9. Standar kerapian tumpukan.", options: [{txt:"Pakai alat bantu (mal).", val:5},{txt:"Ukur jengkal.", val:4},{txt:"Ikuti lipatan lama.", val:3},{txt:"Lipat kecil.", val:2}] },
+            { q: "10. Target output gas 3kg.", options: [{txt:"60 - 80 kg pakaian.", val:5},{txt:"40 - 60 kg pakaian.", val:4},{txt:"70 - 90 kg pakaian (Terlalu irit uap/kurang rapi).", val:3},{txt:"10 - 40 kg pakaian (Sangat boros).", val:2}] },
+        ]},
+        'page-soft-1': { title: "Soft Skill Part 1", questions: [
+            { q: "1. Pelanggan marah baju belum jadi.", options: [{txt:"Dengar, maaf tulus, beri kepastian.", val:5},{txt:"Maaf & jelaskan alasan.", val:4},{txt:"Diam saja.", val:3},{txt:"Membela diri.", val:2}] },
+            { q: "2. Pesan penting operan shift.", options: [{txt:"Tulis buku, tempel, chat WA.", val:5},{txt:"Tulis buku saja.", val:4},{txt:"Ingat-ingat.", val:3},{txt:"Biarkan.", val:2}] },
+            { q: "3. Rekan kerja lambat.", options: [{txt:"Bantu ajarkan trik & ajak kerjasama.", val:5},{txt:"Fokus kerjaan sendiri.", val:4},{txt:"Lapor atasan.", val:3},{txt:"Marah-marah.", val:2}] },
+            { q: "4. Bos salah instruksi.", options: [{txt:"Jalankan dulu, saran sopan nanti.", val:5},{txt:"Jalankan walau tidak setuju.", val:4},{txt:"Mengeluh di belakang.", val:3},{txt:"Pakai cara lama diam-diam.", val:2}] },
+            { q: "5. Teman minta tolong saat sibuk.", options: [{txt:"Tolak halus, jelaskan prioritas.", val:5},{txt:"Bantu sebentar.", val:4},{txt:"Bantu karena ga enakan.", val:3},{txt:"Ikut ngobrol.", val:2}] },
+        ]},
+        'page-soft-2': { title: "Soft Skill Part 2", questions: [
+            { q: "6. Pelanggan minta 'Jangan Dilipat'.", options: [{txt:"Catat sistem, tempel stiker, pastikan rekan lihat.", val:5},{txt:"Tulis besar di nota manual, kasih tahu lisan.", val:4},{txt:"Pisahkan keranjang.", val:3},{txt:"Diingat-ingat saja.", val:2}] },
+            { q: "7. Pelanggan masuk saat sibuk.", options: [{txt:"Berhenti, berdiri, senyum, sapa.", val:5},{txt:"Senyum sapa sambil kerja.", val:4},{txt:"Tunggu mendekat.", val:3},{txt:"Cuek.", val:2}] },
+            { q: "8. Cucian selesai lebih cepat.", options: [{txt:"Segera WA pelanggan.", val:5},{txt:"Tunggu waktu pengambilan.", val:4},{txt:"Diam saja.", val:3},{txt:"Malas.", val:2}] },
+            { q: "9. Komplain setrika kurang licin.", options: [{txt:"Maaf, boleh saya setrika ulang sekarang?", val:5},{txt:"Maaf, nanti disampaikan.", val:4},{txt:"Memang bahannya susah.", val:3},{txt:"Ibu setrika sendiri saja.", val:2}] },
+            { q: "10. Bahasa tubuh saat dimarahi.", options: [{txt:"Kontak mata, nunduk dikit, tegak.", val:5},{txt:"Nunduk terus.", val:4},{txt:"Palingkan wajah.", val:3},{txt:"Sedekap.", val:2}] },
+        ]},
+        'page-cult-1': { title: "Culture Fit Part 1", questions: [
+            { q: "1. Laundry ramai hari libur.", options: [{txt:"Paham risiko, siap shift.", val:5},{txt:"Mau asal lembur cash.", val:4},{txt:"Pilih libur.", val:3},{txt:"Tidak bisa.", val:2}] },
+            { q: "2. Menangani baju bau/kotor.", options: [{txt:"Pakai masker/sarung tangan, kerjakan.", val:5},{txt:"Jijik tapi kerjakan.", val:4},{txt:"Minta teman.", val:3},{txt:"Tolak.", val:2}] },
+            { q: "3. Berdiri 5-7 jam.", options: [{txt:"Biasa kerja fisik, kuat.", val:5},{txt:"Kuat asal duduk tiap jam.", val:4},{txt:"Sakit jika lama.", val:3},{txt:"Suka duduk.", val:2}] },
+            { q: "4. Rutinitas berulang.", options: [{txt:"Tekun, puas hasil rapi.", val:5},{txt:"Bosan tapi dengar musik.", val:4},{txt:"Butuh variasi.", val:3},{txt:"Benci monoton.", val:2}] },
+            { q: "5. Orderan kilat 3 jam.", options: [{txt:"Tertantang atur waktu.", val:5},{txt:"Kerjakan tapi terbebani.", val:4},{txt:"Panik.", val:3},{txt:"Tolak.", val:2}] },
+        ]},
+        'page-cult-2': { title: "Culture Fit Part 2", questions: [
+            { q: "6. Toko ramai, antre.", options: [{txt:"Tenang, bantu bagian macet.", val:5},{txt:"Fokus jobdesk sendiri.", val:4},{txt:"Tunggu suruhan.", val:3},{txt:"Mengeluh.", val:2}] },
+            { q: "7. Ruang kerja panas.", options: [{txt:"Tahan panas, fokus.", val:5},{txt:"Keluar cari angin.", val:4},{txt:"Kerja lambat.", val:3},{txt:"Minta AC.", val:2}] },
+            { q: "8. Kerja tim kecil.", options: [{txt:"Mudah berbaur.", val:5},{txt:"Profesional saja.", val:4},{txt:"Menyendiri.", val:3},{txt:"Pilih teman.", val:2}] },
+            { q: "9. Cek nota vs label.", options: [{txt:"Selalu double check.", val:5},{txt:"Cek sekali.", val:4},{txt:"Cek sekilas.", val:3},{txt:"Tidak perlu.", val:2}] },
+            { q: "10. Pemilik mengawasi.", options: [{txt:"Senang bisa belajar.", val:5},{txt:"Canggung tapi ikut.", val:4},{txt:"Tidak nyaman.", val:3},{txt:"Tidak suka diatur.", val:2}] },
+        ]},
+        'page-likert-1': { title: "Skala Diri Part 1", questions: [
+            { q: "1. Merasa bersalah istirahat lama.", options: [{txt:"SS",val:5}, {txt:"S",val:4}, {txt:"N",val:3}, {txt:"TS",val:2}, {txt:"STS",val:1}] },
+            { q: "2. Menemukan koin boleh disimpan.", options: [{txt:"SS",val:1}, {txt:"S",val:2}, {txt:"N",val:3}, {txt:"TS",val:4}, {txt:"STS",val:5}] },
+            { q: "3. Selalu periksa kerja dua kali.", options: [{txt:"SS",val:5}, {txt:"S",val:4}, {txt:"N",val:3}, {txt:"TS",val:2}, {txt:"STS",val:1}] },
+            { q: "4. Melanggar aturan demi cepat.", options: [{txt:"SS",val:1}, {txt:"S",val:2}, {txt:"N",val:3}, {txt:"TS",val:4}, {txt:"STS",val:5}] },
+            { q: "5. Tidak pernah marah seumur hidup.", options: [{txt:"SS",val:1}, {txt:"S",val:2}, {txt:"N",val:3}, {txt:"TS",val:4}, {txt:"STS",val:5}] },
+        ]},
+        'page-likert-2': { title: "Skala Diri Part 2", questions: [
+            { q: "6. Lapor teman mencuri itu berlebihan.", options: [{txt:"SS",val:1}, {txt:"S",val:2}, {txt:"N",val:3}, {txt:"TS",val:4}, {txt:"STS",val:5}] },
+            { q: "7. Tetap tenang cucian numpuk.", options: [{txt:"SS",val:5}, {txt:"S",val:4}, {txt:"N",val:3}, {txt:"TS",val:2}, {txt:"STS",val:1}] },
+            { q: "8. Pakai kas kecil asal ganti.", options: [{txt:"SS",val:1}, {txt:"S",val:2}, {txt:"N",val:3}, {txt:"TS",val:4}, {txt:"STS",val:5}] },
+            { q: "9. Paham instruksi sekali baca.", options: [{txt:"SS",val:2}, {txt:"S",val:3}, {txt:"N",val:4}, {txt:"TS",val:5}, {txt:"STS",val:1}] },
+            { q: "10. Lapor kesalahan walau dimarahi.", options: [{txt:"SS",val:5}, {txt:"S",val:4}, {txt:"N",val:3}, {txt:"TS",val:2}, {txt:"STS",val:1}] },
+        ]},
+        'page-likert-3': { title: "Skala Diri Part 3", questions: [
+            { q: "11. Bawa pulang sisa bahan wajar.", options: [{txt:"SS",val:1}, {txt:"S",val:2}, {txt:"N",val:3}, {txt:"TS",val:4}, {txt:"STS",val:5}] },
+            { q: "12. Suka rutinitas sama.", options: [{txt:"SS",val:5}, {txt:"S",val:4}, {txt:"N",val:3}, {txt:"TS",val:2}, {txt:"STS",val:1}] },
+        ]},
+    };
+
+// --- UTILITY FUNCTIONS (Perbaikan Calculate Age) ---
+    function calculateAge() {
+        const birthDateInput = document.getElementById('tgl_lahir').value;
+        const usiaInput = document.getElementById('usia');
+        
+        if (!birthDateInput) {
+            usiaInput.value = '';
+            return;
+        }
+
+        // Memastikan input tanggal dibaca dengan format YYYY-MM-DD
+        const parts = birthDateInput.split('-');
+        if (parts.length !== 3) {
+            usiaInput.value = '';
+            usiaInput.placeholder = "Format tanggal tidak valid";
+            return;
+        }
+
+        const birthDate = new Date(parts[0], parts[1] - 1, parts[2]); // YYYY, MM-1, DD
+        const today = new Date();
+        
+        let age = today.getFullYear() - birthDate.getFullYear();
+        const monthDiff = today.getMonth() - birthDate.getMonth();
+        
+        // Koreksi jika belum mencapai ulang tahun tahun ini
+        if (monthDiff < 0 || (monthDiff === 0 && today.getDate() < birthDate.getDate())) {
+            age--;
+        }
+
+        if (age < 0 || age > 100) { 
+            usiaInput.value = ''; 
+            usiaInput.placeholder = "Tanggal tidak valid";
+        } else { 
+            usiaInput.value = age; 
+            usiaInput.placeholder = "Otomatis";
+        }
+    }
+
+    function toggleAnak() {
+        const status = document.getElementById("status_nikah").value;
+        const inputAnak = document.getElementById("jml_anak");
+        
+        if (status === "Belum Menikah") { 
+            inputAnak.value = "0"; 
+            inputAnak.disabled = true; // Non-aktifkan dan set ke 0
+        } 
+        else { 
+            inputAnak.disabled = false; 
+            inputAnak.value = ""; // Bersihkan jika status berubah
+        }
+    }
+
+    // --- (Fungsi-fungsi lain tetap sama) ---
+    // Pastikan Anda menimpa seluruh fungsi di atas di file Anda.
+
+    function shuffleArray(array) {
+        for (let i = array.length - 1; i > 0; i--) {
+            const j = Math.floor(Math.random() * (i + 1));
+            [array[i], array[j]] = [array[j], array[i]];
+        }
+    }
+
+    function updateProgressBar(percent) {
+        document.getElementById('progressBar').style.width = percent + '%';
+    }
+
+    function getPageKey(index) {
+        if (index === 0) return 'page-0'; if (index === 1) return 'page-1'; if (index === 9) return 'page-9';
+        return `page-${index}`;
+    }
+    
+    // --- KNOCKOUT LOGIC ---
+    function checkKnockout(answers) {
+        if (answers.length < 5) return false;
+        // Q1: Ketersediaan (C/D)
+        if (answers[0] && (answers[0].answerText.includes("Hanya Senin-Jumat") || answers[0].answerText.includes("batasan jam kuliah"))) return "Ketersediaan Shift";
+        // Q2: Lembur (D)
+        if (answers[1] && answers[1].answerText.includes("tidak dapat melakukan pekerjaan lembur")) return "Menolak Lembur";
+        // Q3: Berdiri/Panas (C/D)
+        if (answers[2] && (answers[2].answerText.includes("batasan medis") || answers[2].answerText.includes("tidak tahan bekerja"))) return "Fisik (Berdiri/Panas)";
+        // Q4: Angkat Beban (C/D)
+        if (answers[3] && (answers[3].answerText.includes("tidak disarankan mengangkat") || answers[3].answerText.includes("Tidak kuat angkat"))) return "Fisik (Angkat Beban)";
+        // Q5: Alergi (C/D)
+        if (answers[4] && (answers[4].answerText.includes("asma atau alergi") || answers[4].answerText.includes("Alergi debu"))) return "Kesehatan (Alergi)";
+        return false;
+    }
+    
+    // --- NAVIGASI UTAMA ---
+    function goToNextPage() {
+        const currentId = getPageKey(currentPageIndex);
+        let targetPage;
+        let progress = 0;
+
+        // Validasi Identitas (Halaman 1)
+        if (currentPageIndex === 1) {
+            const idForm = document.getElementById("identityForm");
+            if (!idForm.checkValidity()) { alert("Harap lengkapi semua data diri."); idForm.reportValidity(); return; }
+            startTime = Date.now(); // MULAI PENCATATAN WAKTU
+        }
+        
+        // Validasi Jawaban Kuis & KNOCKOUT
+        if (currentPageIndex === 'admin') {
+            if (!validateAndCollectAnswers('quizForm-admin')) { alert("Mohon jawab semua pertanyaan."); return; }
+            const adminAnswers = userAnswersLog.slice(-5); // Ambil 5 jawaban terakhir
+            if (checkKnockout(adminAnswers)) {
+                document.getElementById(currentId).classList.remove("active");
+                document.getElementById('page-disqualified').classList.add("active");
+                currentPageIndex = 'disqualified';
+                return;
+            }
+        }
+        if (currentPageIndex >= 2 || currentPageIndex === 'admin' || currentPageIndex.toString().includes('hard-') || currentPageIndex.toString().includes('soft-') || currentPageIndex.toString().includes('cult-') || currentPageIndex.toString().includes('logic-') || currentPageIndex.toString().includes('tech-') || currentPageIndex.toString().includes('likert-')) {
+            if (currentPageIndex !== 1 && currentPageIndex !== 0 && !validateAndCollectAnswers(`quizForm-${currentPageIndex}`)) { alert("Mohon jawab semua pertanyaan."); return; }
+        }
+        
+        // SEQUENCE LOGIC (Disederhanakan)
+        if (currentPageIndex === 0) { targetPage = 1; progress = 5; }
+        else if (currentPageIndex === 1) { targetPage = 'admin'; progress = 10; }
+        else if (currentPageIndex === 'admin') { targetPage = 'char-1'; progress = 15; }
+        else if (currentPageIndex === 'char-1') { targetPage = 'char-2'; progress = 20; }
+        else if (currentPageIndex === 'char-2') { targetPage = 'logic-1'; progress = 25; }
+        else if (currentPageIndex === 'logic-1') { targetPage = 'logic-2'; progress = 30; }
+        else if (currentPageIndex === 'logic-2') { targetPage = 'tech-1'; progress = 35; }
+        else if (currentPageIndex === 'tech-1') { targetPage = 'tech-2'; progress = 40; }
+        else if (currentPageIndex === 'tech-2') {
+            const posisi = document.getElementById('posisi').value;
+            if (posisi === "Cuci Kiloan dan Satuan") targetPage = 'hard-cuci-1';
+            else if (posisi === "Kasir dan Packing") targetPage = 'hard-kasir-1';
+            else if (posisi === "Setrika") targetPage = 'hard-setrika-1';
+            progress = 45;
+        }
+        else if (currentPageIndex.toString().includes('hard-') && currentPageIndex.toString().includes('-1')) { targetPage = currentPageIndex.replace('-1', '-2'); progress = 55; }
+        else if (currentPageIndex.toString().includes('hard-') && currentPageIndex.toString().includes('-2')) { targetPage = 'soft-1'; progress = 60; }
+        else if (currentPageIndex === 'soft-1') { targetPage = 'soft-2'; progress = 65; }
+        else if (currentPageIndex === 'soft-2') { targetPage = 'cult-1'; progress = 70; }
+        else if (currentPageIndex === 'cult-1') { targetPage = 'cult-2'; progress = 75; }
+        else if (currentPageIndex === 'cult-2') { targetPage = 'likert-1'; progress = 80; }
+        else if (currentPageIndex === 'likert-1') { targetPage = 'likert-2'; progress = 85; }
+        else if (currentPageIndex === 'likert-2') { targetPage = 'likert-3'; progress = 90; }
+        else if (currentPageIndex === 'likert-3') { 
+            // FINAL ACTIONS (FIXED TRANSITION)
+            const endTime = Date.now();
+            const durationMs = endTime - startTime;
+            const minutes = Math.floor(durationMs / 60000);
+            const seconds = Math.floor((durationMs % 60000) / 1000);
+            durationString = `${minutes} menit ${seconds} detik`;
+
+            calculateAndShowResult(); 
+            targetPage = 9; progress = 100; 
+        } 
+        else { targetPage = 0; progress = 0; }
+
+        updateProgressBar(progress);
+        
+        const oldPage = document.getElementById(currentId);
+        const newPage = document.getElementById(`page-${targetPage}`);
+        
+        if (oldPage) oldPage.classList.remove("active");
+        if (newPage) newPage.classList.add("active");
+        
+        const dbKey = (typeof targetPage === 'string' || targetPage === 4 || targetPage === 5 || targetPage === 6 || targetPage === 7 || targetPage === 8) ? `page-${targetPage}` : `page-${targetPage}`;
+        if (questionsDB[dbKey]) renderQuiz(dbKey);
+
+        currentPageIndex = targetPage;
+        window.scrollTo(0, 0);
+    }
+    
+    function validateAndCollectAnswers(formId) {
+        const form = document.getElementById(formId);
+        const dbKey = formId.replace('quizForm-', 'page-'); 
+        if (!questionsDB[dbKey]) return true; // Safety check
+
+        const qCount = questionsDB[dbKey].questions.length;
+        let allAnswered = true;
+
+        for(let i=0; i<qCount; i++) {
+            const selected = form.querySelector(`input[name="q${i}"]:checked`);
+            if (!selected) { allAnswered = false; break; }
+            
+            const qText = questionsDB[dbKey].questions[i].q;
+            const existingIndex = userAnswersLog.findIndex(log => log.qText === qText);
+            const logEntry = { qText: qText, qCategory: questionsDB[dbKey].title, answerText: selected.dataset.text, score: parseInt(selected.value) };
+            
+            if (existingIndex !== -1) userAnswersLog[existingIndex] = logEntry;
+            else userAnswersLog.push(logEntry);
+        }
+        return allAnswered;
+    }
+
+    function renderQuiz(dbKey) {
+        const containerId = dbKey.replace('page-', 'quiz-container-');
+        const container = document.getElementById(containerId);
+        if (!container) return;
+        
+        container.innerHTML = ""; 
+        const categoryData = questionsDB[dbKey];
+        
+        categoryData.questions.forEach((item, index) => {
+            let options = [...item.options];
+            if (!dbKey.includes('likert')) shuffleArray(options); 
+
+            const qBox = document.createElement("div");
+            qBox.className = "question-box";
+            const qTitle = document.createElement("p");
+            qTitle.innerText = item.q;
+            qBox.appendChild(qTitle);
+            
+            options.forEach(opt => {
+                const label = document.createElement("label");
+                label.className = "radio-option";
+                const input = document.createElement("input");
+                input.type = "radio"; input.name = `q${index}`; input.value = opt.val; input.dataset.text = opt.txt; input.required = true;
+                const span = document.createElement("span");
+                span.innerText = opt.txt;
+                label.appendChild(input); label.appendChild(span); qBox.appendChild(label);
+            });
+            container.appendChild(qBox);
+        });
+    }
+
+    function getAnalysis(score, max, name) {
+        const percent = (score / max) * 100;
+        let result = '';
+        if (['Kesiapan Logistik','Tes Teknis','Logika & Umum','Hard Skill'].includes(name)) {
+            if (percent >= 80) result = `(80%+) Sangat Kuat. Kompeten teknis/logistik.`;
+            else if (percent >= 60) result = `(60%+) Memadai. Cukup baik, perlu arahan.`;
+            else result = `(<60%) Perlu Perbaikan. Butuh training intensif.`;
+        } else { 
+            if (percent >= 85) result = `(85%+) Sangat Kuat. Karakter ideal.`;
+            else if (percent >= 70) result = `(70%+) Positif. Karakter baik.`;
+            else result = `(<70%) Potensi Risiko. Ada kecenderungan kurang profesional.`;
+        }
+        return `<b>${name} (${score}/${max}):</b> ${result}`;
+    }
+
+    function calculateAndShowResult() {
+        finalScore = 0;
+        const scores = {};
+        window.analysisText = []; // Global array untuk PDF
+        
+        userAnswersLog.forEach(log => {
+            // Mapping kategori berdasarkan nama Title di DB, perlu dinormalisasi
+            // Cari key DB asli
+            let dbKey = "";
+            for (const [key, value] of Object.entries(questionsDB)) {
+                if (value.title === log.qCategory) { dbKey = key; break; }
+            }
+            // Get generic category name form mapping
+            const catName = categoryMapping[dbKey] ? categoryMapping[dbKey].name : log.qCategory;
+
+            if (!scores[catName]) scores[catName] = { score: 0, max: 0 };
+            
+            // Hitung Max Score dinamis berdasarkan jumlah soal x 5
+            scores[catName].score += log.score;
+            scores[catName].max += 5; 
+        });
+
+        // Generate Analysis Text Array
+        Object.keys(scores).forEach(name => {
+            window.analysisText.push(getAnalysis(scores[name].score, scores[name].max, name));
+            finalScore += scores[name].score;
+        });
+
+        document.getElementById("res_nama").innerText = document.getElementById("nama").value;
+        document.getElementById("res_posisi").innerText = document.getElementById("posisi").value;
+        document.getElementById("finalScore").innerText = finalScore;
+        document.getElementById("res_duration").innerText = durationString;
+    }
+
+    async function processPDFandWhatsApp() { await generatePDF(); sendWhatsApp(); }
+
+    async function generatePDF() {
+        const { jsPDF } = window.jspdf;
+        const doc = new jsPDF();
+        const nama = document.getElementById("nama").value.toUpperCase();
+        const posisi = document.getElementById("posisi").value;
+        const usia = document.getElementById("usia").value;
+        const tempatLahir = document.getElementById("tempat_lahir").value;
+        const tglLahir = document.getElementById("tgl_lahir").value;
+        const fileName = `${nama}_${posisi}_${usia}.pdf`.replace(/ /g, '_');
+
+        doc.setFontSize(16); doc.text("LAPORAN HASIL KUISIONER REKRUTMEN", 105, 15, null, null, "center");
+        doc.setFontSize(10);
+        let yPos = 30;
+        
+        // Header Identitas
+        doc.setFont("helvetica", "bold"); doc.text("A. DATA PRIBADI", 15, yPos); yPos += 7;
+        doc.setFont("helvetica", "normal");
+        doc.text(`Nama: ${nama}`, 15, yPos); yPos += 5;
+        doc.text(`NIK: ${document.getElementById("nik").value}`, 15, yPos); yPos += 5;
+        doc.text(`Posisi: ${posisi}`, 15, yPos); yPos += 5;
+        doc.text(`TTL: ${tempatLahir}, ${tglLahir} (Usia: ${usia})`, 15, yPos); yPos += 5;
+        doc.text(`HP: ${document.getElementById("hp").value}`, 15, yPos); yPos += 5;
+        doc.text(`DURASI PENGISIAN: ${durationString}`, 15, yPos); yPos += 8;
+        // Kontak Darurat
+        doc.text(`Darurat: ${document.getElementById("darurat_nama").value} (${document.getElementById("darurat_hubungan").value}) - ${document.getElementById("darurat_hp").value}`, 15, yPos); yPos += 8;
+
+        // Analisis
+        doc.setFont("helvetica", "bold"); doc.text("B. ANALISIS SKOR", 15, yPos); yPos += 7;
+        doc.setFont("helvetica", "normal");
+        if (window.analysisText) {
+            window.analysisText.forEach(txt => {
+                // Bersihkan HTML tag <b>
+                const cleanTxt = txt.replace(/<b>|<\/b>/g, '');
+                doc.text(cleanTxt, 15, yPos); yPos += 5;
+            });
+        }
+        yPos += 5;
+
+        // Detail Jawaban
+        doc.setFont("helvetica", "bold"); doc.text("C. DETAIL JAWABAN", 15, yPos); yPos += 7;
+        doc.setFontSize(9);
+        doc.setFont("helvetica", "normal");
+        
+        userAnswersLog.forEach((item, idx) => {
+            if (yPos > 275) { doc.addPage(); yPos = 20; }
+            const line = `${idx+1}. [${item.score}] ${item.qText.substring(0, 60)}...`;
+            doc.text(line, 15, yPos);
+            yPos += 4;
+        });
+        
+        doc.save(fileName);
+    }
+
+    function sendWhatsApp() {
+        const hp = "6282166303090"; 
+        const nama = document.getElementById("nama").value;
+        const msg = `Halo Admin, saya ${nama} sudah selesai mengisi kuisioner. Skor: ${finalScore}. File PDF terlampir.`;
+        window.open(`https://wa.me/${hp}?text=${encodeURIComponent(msg)}`, '_blank');
+    }
+
+    document.getElementById("tgl_isi").valueAsDate = new Date();
+    window.onload = function() {
+        toggleAnak(); 
+        document.querySelectorAll('.page-section').forEach(p => p.classList.remove('active'));
+        document.getElementById('page-0').classList.add('active'); 
+    };
+</script>
+
+</body>
+</html>
